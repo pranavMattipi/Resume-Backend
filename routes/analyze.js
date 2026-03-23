@@ -31,7 +31,8 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 router.post('/', upload.single('resume'), async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ error: 'No PDF file provided.' });
+            console.error('Upload Error: No file in request');
+            return res.status(400).json({ error: 'No PDF file provided. Please ensure the field name is "resume".' });
         }
 
         if (req.file.mimetype !== 'application/pdf') {
@@ -52,13 +53,18 @@ router.post('/', upload.single('resume'), async (req, res) => {
                 resumeText = typeof result === 'string' ? result : (result ? result.text : '');
             }
         } catch (parseError) {
-            console.error("PDF Parsing Error:", parseError);
-            return res.status(400).json({ error: 'Failed to parse PDF file. It might be corrupted or encrypted.' });
+            console.error("PDF Parsing Error (Vercel):", parseError);
+            return res.status(400).json({ 
+                error: 'Failed to extract text from PDF.', 
+                details: parseError.message,
+                stack: process.env.NODE_ENV === 'development' ? parseError.stack : undefined
+            });
         }
 
 
         if (!resumeText || resumeText.trim() === '') {
-            return res.status(400).json({ error: 'Could not extract text from the PDF. It may be an image-based PDF.' });
+            console.error('Parse Error: Empty text extracted');
+            return res.status(400).json({ error: 'Could not extract text from the PDF. It may be an image-based PDF or require OCR.' });
         }
 
         // 2. Call Google Gemini API for structured analysis
