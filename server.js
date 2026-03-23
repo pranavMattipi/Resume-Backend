@@ -16,33 +16,43 @@ app.use(express.json());
 // Routes
 app.use('/api/analyze', analyzeRoute);
 
+// Favicon handler to prevent 500s on common browser requests
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Test Route
 app.get('/', (req, res) => {
-    res.json({ message: 'Resume Analyzer API is running on Vercel' });
+    res.json({ 
+        message: 'Resume Analyzer API is running on Vercel',
+        status: 'online',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Database connection
 const connectDB = async () => {
+    if (mongoose.connection.readyState >= 1) return;
+    
     try {
-        if (mongoose.connection.readyState === 0) {
-            await mongoose.connect(process.env.MONGODB_URI);
-            console.log('MongoDB connected successfully');
+        if (!process.env.MONGODB_URI) {
+            console.warn('MONGODB_URI is missing in environment variables');
+            return;
         }
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('MongoDB connected successfully');
     } catch (error) {
-        console.error('MongoDB connection error:', error);
+        console.error('MongoDB connection error:', error.message);
+        // Do not process.exit(1) in a serverless function
     }
 };
 
+// Start database connection
+connectDB();
+
 // For local development
 if (process.env.NODE_ENV !== 'production') {
-    connectDB().then(() => {
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
     });
-} else {
-    // In production (Vercel), connect to DB on first request or startup
-    connectDB();
 }
 
 module.exports = app;
