@@ -9,12 +9,12 @@ const analyzeRoute = require('./routes/analyze');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Routes
+app.use('/api/analyze', analyzeRoute);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Routes
-app.use('/api/analyze', analyzeRoute);
 
 // Favicon handler to prevent 500s on common browser requests
 app.get('/favicon.ico', (req, res) => res.status(204).end());

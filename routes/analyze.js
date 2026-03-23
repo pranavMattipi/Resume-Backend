@@ -23,6 +23,13 @@ router.post('/', upload.single('resume'), async (req, res) => {
         }
 
         console.log(`Processing PDF: ${req.file.originalname} (${req.file.size} bytes)`);
+        
+        // Integrity check: PDF should start with %PDF-
+        const header = req.file.buffer.slice(0, 5).toString();
+        console.log(`Buffer Header: ${header}`);
+        if (header !== '%PDF-') {
+            console.error('Integrity Error: File does not start with %PDF-');
+        }
 
         // 1. Parse PDF
         let resumeText;
@@ -30,6 +37,10 @@ router.post('/', upload.single('resume'), async (req, res) => {
             const data = await pdfParse(req.file.buffer);
             resumeText = data.text;
             console.log(`Extraction Success: ${resumeText?.length || 0} characters found.`);
+            
+            if (resumeText && resumeText.length > 0) {
+                console.log('Sample Text (First 50 chars):', resumeText.substring(0, 50).replace(/\n/g, ' '));
+            }
         } catch (parseError) {
             console.error("PDF Parsing Error (Vercel):", parseError);
             return res.status(400).json({ 
