@@ -130,22 +130,36 @@ Your output MUST be strictly a JSON object with the following exact structure:
             };
         }
 
-        // 3. Save to MongoDB
-        const newAnalysis = new Analysis({
-            originalFileName: req.file.originalname,
-            atsScore: analysisResult.atsScore || 0,
-            strengths: analysisResult.strengths || [],
-            weaknesses: analysisResult.weaknesses || [],
-            suggestions: analysisResult.suggestions || []
-        });
+        // 3. Save to MongoDB (Optional - return result even if this fails)
+        try {
+            const newAnalysis = new Analysis({
+                originalFileName: req.file.originalname,
+                atsScore: analysisResult.atsScore || 0,
+                strengths: analysisResult.strengths || [],
+                weaknesses: analysisResult.weaknesses || [],
+                suggestions: analysisResult.suggestions || []
+            });
 
-        await newAnalysis.save();
-
-        // 4. Return to frontend
-        res.json({
-            success: true,
-            data: newAnalysis
-        });
+            await newAnalysis.save();
+            
+            // Return with saved data
+            return res.json({
+                success: true,
+                data: newAnalysis
+            });
+        } catch (dbError) {
+            console.error('Database Save Error (Proceeding with AI Result only):', dbError.message);
+            
+            // Return AI result directly if DB fails
+            return res.json({
+                success: true,
+                data: {
+                    ...analysisResult,
+                    _id: "temp_" + Date.now(),
+                    originalFileName: req.file.originalname
+                }
+            });
+        }
 
     } catch (error) {
         console.error('Analysis error:', error);
