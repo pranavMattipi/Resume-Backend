@@ -1,3 +1,20 @@
+// Polyfills for Vercel Serverless environment (fixes pdf-parse DOMMatrix error)
+if (typeof global.DOMMatrix === 'undefined') {
+    global.DOMMatrix = class DOMMatrix {
+        constructor() {}
+    };
+}
+if (typeof global.Path2D === 'undefined') {
+    global.Path2D = class Path2D {
+        constructor() {}
+    };
+}
+if (typeof global.ImageData === 'undefined') {
+    global.ImageData = class ImageData {
+        constructor() {}
+    };
+}
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
