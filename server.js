@@ -9,11 +9,22 @@ const analyzeRoute = require('./routes/analyze');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Middleware
-app.use(cors());
+// Manual CORS headers (for maximum Vercel compatibility)
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://resume-frontend-ten-liard.vercel.app");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+    next();
+});
 
 // Routes
 app.use('/api/analyze', analyzeRoute);
+
+// Middleware
+app.use(cors());
 
 // Global Middleware for other routes
 app.use(express.json());
