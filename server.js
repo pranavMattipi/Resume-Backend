@@ -18,7 +18,7 @@ app.use('/api/analyze', analyzeRoute);
 
 // Test Route
 app.get('/', (req, res) => {
-    res.json({ message: 'Resume Analyzer API is running on Port 8000' });
+    res.json({ message: 'Resume Analyzer API is running on Vercel' });
 });
 
 // Database connection

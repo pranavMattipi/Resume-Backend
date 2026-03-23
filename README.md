@@ -1,6 +1,6 @@
 # Resume-Backend (Gemini AI Powered)
 
-A premium backend for the Resume Analyzer application, utilizing Google Gemini AI 2.0 Flash for intelligent ATS scoring and feedback.
+A premium backend for the Resume Analyzer application, utilizing Google Gemini AI 2.0 Flash for intelligent ATS scoring and feedback. Deployed on Vercel: `https://resume-backend-one-mu.vercel.app/`.
 
 ## Features
 - **AI Analysis**: Deep analysis of technical resumes using Gemini 2.0 Flash.
@@ -39,7 +39,8 @@ A premium backend for the Resume Analyzer application, utilizing Google Gemini A
    ```
 
 ## API Endpoints
-- `POST /api/analyze`: Analyzes a resume PDF. (Requires `multipart/form-data` with a `resume` file field).
+- `POST /api/analyze`: Analyzes a resume PDF.
+- Base URL: `https://resume-backend-one-mu.vercel.app/`
 
 ## Tech Stack
 - Node.js & Express
