@@ -51,10 +51,12 @@ router.post('/', upload.single('resume'), async (req, res) => {
         try {
             const data = await pdfParse(req.file.buffer);
             resumeText = data.text;
+            console.log(`PDF Info: ${JSON.stringify(data.info || {})}`);
+            console.log(`PDF Pages: ${data.numpages}`);
             console.log(`Extraction Success: ${resumeText?.length || 0} characters found.`);
             
             if (resumeText && resumeText.length > 0) {
-                console.log('Sample Text (First 50 chars):', resumeText.substring(0, 50).replace(/\n/g, ' '));
+                console.log('Sample Text:', resumeText.substring(0, 50).replace(/\n/g, ' '));
             }
         } catch (parseError) {
             console.error("PDF Parsing Error (Vercel):", parseError);
