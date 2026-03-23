@@ -24,16 +24,25 @@ app.get('/', (req, res) => {
 // Database connection
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
-        console.log('MongoDB connected successfully');
+        if (mongoose.connection.readyState === 0) {
+            await mongoose.connect(process.env.MONGODB_URI);
+            console.log('MongoDB connected successfully');
+        }
     } catch (error) {
         console.error('MongoDB connection error:', error);
-        process.exit(1);
     }
 };
 
-connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+    connectDB().then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
     });
-});
+} else {
+    // In production (Vercel), connect to DB on first request or startup
+    connectDB();
+}
+
+module.exports = app;
