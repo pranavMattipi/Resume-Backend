@@ -1,24 +1,7 @@
-// Polyfills for Vercel Serverless environment (fixes pdf-parse DOMMatrix error)
-if (typeof global.DOMMatrix === 'undefined') {
-    global.DOMMatrix = class DOMMatrix {
-        constructor() {}
-    };
-}
-if (typeof global.Path2D === 'undefined') {
-    global.Path2D = class Path2D {
-        constructor() {}
-    };
-}
-if (typeof global.ImageData === 'undefined') {
-    global.ImageData = class ImageData {
-        constructor() {}
-    };
-}
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse-fork');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Analysis = require('../models/Analysis');
 
@@ -36,22 +19,17 @@ router.post('/', upload.single('resume'), async (req, res) => {
         }
 
         if (req.file.mimetype !== 'application/pdf') {
-            return res.status(400).json({ error: 'Only PDF files are supported.' });
+            console.warn('File type warning:', req.file.mimetype);
         }
+
+        console.log(`Processing PDF: ${req.file.originalname} (${req.file.size} bytes)`);
 
         // 1. Parse PDF
         let resumeText;
         try {
-            if (typeof pdfParse === 'function') {
-                const data = await pdfParse(req.file.buffer);
-                resumeText = data.text;
-            } else {
-                const { PDFParse } = require('pdf-parse');
-                const parser = new PDFParse({ data: req.file.buffer });
-                const result = await parser.getText();
-                // Handle both possible return types: string or object with text property
-                resumeText = typeof result === 'string' ? result : (result ? result.text : '');
-            }
+            const data = await pdfParse(req.file.buffer);
+            resumeText = data.text;
+            console.log(`Extraction Success: ${resumeText?.length || 0} characters found.`);
         } catch (parseError) {
             console.error("PDF Parsing Error (Vercel):", parseError);
             return res.status(400).json({ 
