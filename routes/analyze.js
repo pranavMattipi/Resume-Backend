@@ -4,6 +4,19 @@ const multer = require('multer');
 const pdfParse = require('pdf-parse-fork');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Analysis = require('../models/Analysis');
+const mongoose = require('mongoose'); // Added mongoose import
+
+// Ensure database is connected
+const connectDB = async () => {
+    if (mongoose.connection.readyState >= 1) return; // Check if already connected
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('MongoDB connected in route.');
+    } catch (err) {
+        console.error('Database connection error in route:', err.message);
+        // Depending on desired behavior, you might want to re-throw or handle this more robustly
+    }
+};
 
 // Set up Multer for memory storage (file buffer)
 const upload = multer({ storage: multer.memoryStorage() });
@@ -13,6 +26,8 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 router.post('/', upload.single('resume'), async (req, res) => {
     try {
+        await connectDB(); // Ensure DB connection at the start of the route
+        
         if (!req.file) {
             console.error('Upload Error: No file in request');
             return res.status(400).json({ error: 'No PDF file provided. Please ensure the field name is "resume".' });
