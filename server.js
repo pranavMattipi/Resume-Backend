@@ -11,9 +11,20 @@ const PORT = process.env.PORT || 8000;
 
 // Manual CORS headers (for maximum Vercel compatibility)
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://resume-frontend-ten-liard.vercel.app");
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+        "https://resume-frontend-ten-liard.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+        res.header("Access-Control-Allow-Origin", origin);
+    }
+    
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    
     if (req.method === "OPTIONS") {
         return res.status(200).end();
     }

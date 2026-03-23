@@ -68,16 +68,13 @@ router.post('/', upload.single('resume'), async (req, res) => {
         }
 
 
-        if (!resumeText || resumeText.trim() === '') {
-            console.error('Parse Error: Empty text extracted');
-            return res.status(400).json({ error: 'Could not extract text from the PDF. It may be an image-based PDF or require OCR.' });
-        }
-
-        // 2. Call Google Gemini API for structured analysis
+        // 2. Call Google Gemini API for structured analysis (Multimodal: supports text & direct PDF buffer)
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `You are an expert ATS (Applicant Tracking System) and a senior technical recruiter. 
-Please thoroughly analyze the following resume text and provide constructive feedback. 
+Please thoroughly analyze the provided resume. 
+${resumeText ? `Specifically, here is the extracted text for context: \n${resumeText}\n` : 'Note: Text extraction was empty, please analyze the PDF file directly via your visual/document understanding capabilities.'}
+
 Your output MUST be strictly a JSON object with the following exact structure:
 {
   "atsScore": (a number between 0 and 100 representing the estimated ATS compatibility and overall quality),
@@ -85,17 +82,24 @@ Your output MUST be strictly a JSON object with the following exact structure:
   "weaknesses": ["list of at least 3 areas that are lacking or could be improved"],
   "suggestions": ["list of at least 3 highly actionable bullet points for improvement"]
 }
-
-Resume Text:
-${resumeText}
 `;
         
+        const filePart = {
+            inlineData: {
+                data: req.file.buffer.toString('base64'),
+                mimeType: 'application/pdf'
+            }
+        };
+
         let analysisResult;
         try {
-            const result = await model.generateContent(prompt);
+            console.log("Sending multimodal request to Gemini...");
+            const result = await model.generateContent([prompt, filePart]);
             const response = await result.response;
             const text = response.text();
             
+            console.log("Gemini Response received.");
+
             // Extract JSON from the response text if Gemini wraps it in markdown (common)
             const jsonMatch = text.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
